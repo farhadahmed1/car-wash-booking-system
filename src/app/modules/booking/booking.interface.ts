@@ -1,21 +1,34 @@
 import { Types } from 'mongoose';
 
-export type TSlot = {
-  service: Types.ObjectId;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  isBooked: 'booked' | 'available' | 'canceled';
-};
+export type TVehicleType =
+  | 'car'
+  | 'truck'
+  | 'SUV'
+  | 'van'
+  | 'motorcycle'
+  | 'bus'
+  | 'electricVehicle'
+  | 'hybridVehicle'
+  | 'bicycle'
+  | 'tractor';
 
-export interface SlotData {
-  service: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
+export interface TBooking {
+  customer: Types.ObjectId;
+  service: Types.ObjectId;
+  slot: Types.ObjectId;
+  vehicleType: TVehicleType;
+  vehicleBrand: string;
+  vehicleModel: string;
+  manufacturingYear: number;
+  registrationPlate: string;
 }
 
-export interface SlotTime {
-  startTime: string;
-  endTime: string;
+export interface TBookingRequest {
+  serviceId: Types.ObjectId;
+  slotId: Types.ObjectId;
+  vehicleType: TVehicleType;
+  vehicleBrand: string;
+  vehicleModel: string;
+  manufacturingYear: number;
+  registrationPlate: string;
 }

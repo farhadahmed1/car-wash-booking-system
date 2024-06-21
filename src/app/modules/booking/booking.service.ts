@@ -1,50 +1,54 @@
-import { Types } from 'mongoose';
 import { ServicesModel } from '../services/service.model';
-import { SlotData, TSlot } from './booking.interface';
-import { generateSlots } from './booking.utils';
-import { SlotModel } from './booking.model';
+import { SlotModel } from '../slot/slot.model';
+import { User } from '../user/user.model';
+import { TBooking, TBookingRequest } from './booking.interface';
+import { BookingModel } from './booking.model';
 
-const createSlotIntoDB = async (slotData: SlotData): Promise<TSlot[]> => {
-  // Fetch the service to get its duration
-  const service = await ServicesModel.findById(slotData.service);
-  if (!service) {
+const createBookingIntoDB = async (
+  email: string,
+  bookingData: TBookingRequest,
+) => {
+  //   console.log(bookingData)
+  const userInfo = await User.findOne({ email });
+  if (!userInfo) {
+    throw new Error('User not found');
+  }
+  const serviceInfo = await ServicesModel.findById({
+    _id: bookingData?.serviceId,
+  });
+  if (!serviceInfo) {
     throw new Error('Service not found');
   }
-
-  const serviceDuration = service.duration;
-  if (!serviceDuration) {
-    throw new Error('Service duration is not defined');
+  const slotInfo = await SlotModel.findById({ _id: bookingData?.slotId });
+  if (!slotInfo) {
+    throw new Error('Slot not found');
   }
 
-  const slots = generateSlots(
-    slotData.startTime,
-    slotData.endTime,
-    serviceDuration,
-  );
+  slotInfo.isBooked = 'booked';
+  await slotInfo.save();
 
-  const slotDocuments = slots.map((slot) => ({
-    service: new Types.ObjectId(slotData.service),
-    date: slotData.date,
-    startTime: slot.startTime,
-    endTime: slot.endTime,
-  }));
+  const newBookingData: Partial<TBooking> = {
+    customer: userInfo._id,
+    service: serviceInfo._id,
+    slot: slotInfo._id,
+    vehicleType: bookingData.vehicleType,
+    vehicleBrand: bookingData.vehicleBrand,
+    vehicleModel: bookingData.vehicleModel,
+    manufacturingYear: bookingData.manufacturingYear,
+    registrationPlate: bookingData.registrationPlate,
+  };
 
-  const createdSlots = await SlotModel.insertMany(slotDocuments);
-  return createdSlots.map((slot) => slot.toObject() as TSlot); // Convert to plain objects
+  const newBooking = await BookingModel.create(newBookingData);
+
+  const populatedBooking = await BookingModel.findById(newBooking._id)
+    .populate('customer', '_id name email phone address')
+    .populate('service', '_id name description price duration isDeleted')
+    .populate('slot', '_id service date startTime endTime isBooked')
+    .lean();
+
+  return populatedBooking;
 };
 
-const getAllAvailableSlotsFromDB = async () => {
-  const result = await SlotModel.find({ isBooked: { $ne: 'booked' } }).populate(
-    {
-      path: 'service',
-      match: { isDeleted: { $ne: true } },
-    },
-  );
-  const filteredResult = result.filter((slot) => slot.service !== null);
-  return filteredResult;
-};
-
-export const SlotServices = {
-  createSlotIntoDB,
-  getAllAvailableSlotsFromDB,
+export const bookingServices = {
+  createBookingIntoDB,
 };

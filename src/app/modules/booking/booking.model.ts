@@ -1,25 +1,36 @@
 import { Schema, model } from 'mongoose';
-import { TSlot } from './booking.interface';
+import { TBooking } from './booking.interface';
 
-const SlotSchema = new Schema<TSlot>(
+const bookingSchema = new Schema<TBooking>(
   {
-    service: {
-      type: Schema.Types.ObjectId,
-      ref: 'Services',
+    customer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    service: { type: Schema.Types.ObjectId, ref: 'Services', required: true },
+    slot: { type: Schema.Types.ObjectId, ref: 'Slot', required: true },
+    vehicleType: {
+      type: String,
+      enum: [
+        'car',
+        'truck',
+        'SUV',
+        'van',
+        'motorcycle',
+        'bus',
+        'electricVehicle',
+        'hybridVehicle',
+        'bicycle',
+        'tractor',
+      ],
+
       required: true,
     },
-    date: { type: Date, required: true },
-    startTime: { type: String, required: true },
-    endTime: { type: String, required: true },
-    isBooked: {
-      type: String,
-      enum: ['booked', 'available', 'canceled'],
-      default: 'available',
-    },
+    vehicleBrand: { type: String, required: true },
+    vehicleModel: { type: String, required: true },
+    manufacturingYear: { type: Number, required: true },
+    registrationPlate: { type: String, required: true, unique: true },
   },
   {
     timestamps: true,
   },
 );
 
-export const SlotModel = model<TSlot>('Slot', SlotSchema);
+export const BookingModel = model<TBooking>('Booking', bookingSchema);
