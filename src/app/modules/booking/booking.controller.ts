@@ -2,7 +2,7 @@ import httpStatus from 'http-status';
 import catchAsync from '../../middlewares/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { getUserInfoFromToken } from '../../utils/getUserInfoFromToken';
-import { bookingServices } from './booking.service';
+import { BookingServices } from './booking.service';
 import { BookingModel } from './booking.model';
 import { handleNoDataFound } from '../../errors/handleNoDataFound';
 
@@ -12,7 +12,7 @@ const createBooking = catchAsync(async (req, res) => {
 
   const { email } = getUserInfoFromToken(token as string);
 
-  const result = await bookingServices.createBookingIntoDB(email, bookingData);
+  const result = await BookingServices.createBookingIntoDB(email, bookingData);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -42,7 +42,26 @@ const getAllBookings = catchAsync(async (req, res) => {
   });
 });
 
-export const bookingController = {
+const getMyBookings = catchAsync(async (req, res) => {
+  const token = req.headers.authorization;
+  const { email } = getUserInfoFromToken(token as string);
+
+  const result = await BookingServices.getMyBookingsIntoDB(email);
+
+  if (!result || result?.length === 0) {
+    return handleNoDataFound(res);
+  }
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Service is retrieved successfully',
+    data: result,
+  });
+});
+
+export const BookingController = {
   createBooking,
   getAllBookings,
+  getMyBookings,
 };

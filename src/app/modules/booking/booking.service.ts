@@ -49,6 +49,20 @@ const createBookingIntoDB = async (
   return populatedBooking;
 };
 
-export const bookingServices = {
+const getMyBookingsIntoDB = async (email: string) => {
+  // const result = await Booking.find().populate('customer')
+  const user = await User.findOne({ email });
+  if (user) {
+    const result = await BookingModel.find({ customer: user._id })
+      .populate('service', '_id name description price duration')
+      .populate('slot', '_id service date startTime endTime isBooked')
+      .select('-customer')
+      .lean();
+    return result;
+  }
+};
+
+export const BookingServices = {
   createBookingIntoDB,
+  getMyBookingsIntoDB,
 };
