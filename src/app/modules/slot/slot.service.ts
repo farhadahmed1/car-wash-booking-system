@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from 'mongoose';
 import { ServicesModel } from '../services/service.model';
 import { SlotData, TSlot } from './slot.interface';
 import { generateSlots } from './slot.utils';
 import { SlotModel } from './slot.model';
+import AppError from '../../errors/AppError';
+import httpStatus from 'http-status';
 
 const createSlotIntoDB = async (slotData: SlotData): Promise<TSlot[]> => {
   // Fetch the service to get its duration
@@ -33,17 +36,50 @@ const createSlotIntoDB = async (slotData: SlotData): Promise<TSlot[]> => {
   return createdSlots.map((slot) => slot.toObject() as TSlot); // Convert to plain objects
 };
 
-const getAllAvailableSlotsFromDB = async () => {
-  const result = await SlotModel.find({ isBooked: { $ne: 'booked' } }).populate(
-    {
+const getAllAvailableSlotsFromDB = async (query?: {
+  date?: string;
+  serviceId?: string;
+}) => {
+  if (query && Object.keys(query).length > 0) {
+    let result: any;
+    const { date, serviceId } = query;
+    if (date) {
+      result = await SlotModel.find({ date: { $in: date } });
+    }
+    if (serviceId) {
+      result = await SlotModel.find({ service: { $in: serviceId } });
+    }
+
+    if (result?.length <= 0) {
+      throw new AppError(httpStatus.NOT_FOUND, 'No Data Found');
+    }
+
+    return result;
+  } else {
+    const result = await SlotModel.find().populate({
       path: 'service',
       match: { isDeleted: { $ne: true } },
-    },
-  );
-  const filteredResult = result.filter((slot) => slot.service !== null);
-  return filteredResult;
+    });
+    return result;
+  }
 };
+// const getAllAvailableSlotsFromDB = async (query: Record<string, undefined>) => {
+//   const slotQuery = new QueryBuilder(
+//     SlotModel.find().populate({
+//       path: 'service',
+//       match: { isDeleted: { $ne: true } },
+//     }),
+//     query,
+//   )
+//     .search(slotSearchableFields)
+//     .filter()
+//     .sort()
+//     .paginate()
+//     .fields();
 
+//   const result = await slotQuery.modelQuery;
+//   return result;
+// };
 export const SlotServices = {
   createSlotIntoDB,
   getAllAvailableSlotsFromDB,

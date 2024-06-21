@@ -14,5 +14,3 @@ export const minutesToTime = (minutes: number): string => {
 
 // Pattern for validating MongoDB ObjectId
 export const objectIdPattern = /^[0-9a-fA-F]{24}$/;
-
-export const slotSearchableFields = ['date', 'isBooked'];
