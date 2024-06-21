@@ -1,28 +1,41 @@
 import { z } from 'zod';
+import { objectIdPattern } from './slot.constant';
 
-const createUserValidationSchema = z.object({
+const createSlotValidationSchema = z.object({
   body: z.object({
-    name: z
-      .string()
-      .trim()
-      .min(1, 'Name is required')
-      .max(25, 'Name length should be less than 25'),
-    email: z.string().email('Invalid email format').trim(),
-    password: z.string(),
-    phone: z.string().optional(),
-    address: z.string().optional(),
-    role: z.enum(['admin', 'user']),
+    service: z
+      .string({
+        invalid_type_error: 'Service ID must be a string',
+      })
+      .refine((value) => objectIdPattern.test(value), {
+        message: 'Invalid Service ID format',
+      }),
+    date: z
+      .string({
+        invalid_type_error: 'Date must be a string',
+      })
+      .refine((value) => !isNaN(Date.parse(value)), {
+        message: 'Invalid date format',
+      }),
+    startTime: z
+      .string({
+        invalid_type_error: 'Start time must be a string',
+      })
+      .regex(/^([01]\d|2[0-3]):?([0-5]\d)$/, 'Invalid start time format'),
+    endTime: z
+      .string({
+        invalid_type_error: 'End time must be a string',
+      })
+      .regex(/^([01]\d|2[0-3]):?([0-5]\d)$/, 'Invalid end time format'),
+    isBooked: z
+      .enum(['booked', 'available', 'canceled'], {
+        invalid_type_error:
+          'isBooked must be one of "booked", "available", "canceled"',
+      })
+      .optional(),
   }),
 });
 
-const loginUserValidationSchema = z.object({
-  body: z.object({
-    email: z.string().email('Invalid email format').trim(),
-    password: z.string(),
-  }),
-});
-
-export const UserValidation = {
-  createUserValidationSchema,
-  loginUserValidationSchema,
+export const SlotValidation = {
+  createSlotValidationSchema,
 };
