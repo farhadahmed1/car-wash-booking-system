@@ -31,4 +31,4 @@ const servicesSchema = new Schema<TService>(
     timestamps: true,
   },
 );
-export const ServicesModel = model<TService>(' Services', servicesSchema);
+export const ServicesModel = model<TService>('Services', servicesSchema);
