@@ -1,5 +1,5 @@
-import bcrypt from 'bcrypt';
 import config from '../../config';
+// import bcrypt from 'bcrypt';
 import { TLoginInfo, TUser } from './user.interface';
 import { User } from './user.model';
 import AppError from '../../errors/AppError';
@@ -20,19 +20,23 @@ const createUserIntoDB = async (payload: TUser) => {
 };
 
 const loginUser = async (payload: TLoginInfo) => {
-  const { email, password } = payload;
-
-  const user = await User.findOne({ email: email });
-
+  // checking if the user is exist
+  // console.log(payload)
+  const user = await User.isUserExistsByEmail(payload.email);
+  // console.log(user)
   if (!user) {
-    throw new AppError(
-      httpStatus.NOT_FOUND,
-      'User not found please Register!!!',
-    );
+    throw new AppError(httpStatus.NOT_FOUND, 'This user is not found !');
   }
 
+  //checking if the password is correct
+
+  if (!(await User.isPasswordMatched(payload?.password, user?.password)))
+    throw new AppError(httpStatus.FORBIDDEN, 'Password do not matched');
+
+  //create token and sent to the  client
+
   const jwtPayload = {
-    userId: user._id,
+    email: user.email,
     role: user.role,
   };
 
@@ -42,15 +46,9 @@ const loginUser = async (payload: TLoginInfo) => {
     config.Jwt_refresh_expires_in as string,
   );
 
-  const checkPassword = await bcrypt.compare(password, user.password);
-
-  if (!checkPassword) {
-    throw new AppError(httpStatus.FORBIDDEN, 'Please enter valid password');
-  }
-
-  const validateUser = await User.findOne({ email: email }).select('-password');
-
-  return { validateUser, token: accessToken };
+  return {
+    accessToken: `Bearer ${accessToken}`,
+  };
 };
 
 export const UserServices = {
