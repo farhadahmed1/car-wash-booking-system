@@ -23,7 +23,7 @@ const loginUser = async (payload: TLoginInfo) => {
   // checking if the user is exist
   // console.log(payload)
   const user = await User.isUserExistsByEmail(payload.email);
-  // console.log(user)
+  //console.log(user);
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'This user is not found !');
   }
@@ -47,7 +47,9 @@ const loginUser = async (payload: TLoginInfo) => {
   );
 
   return {
-    accessToken: `Bearer ${accessToken}`,
+    // accessToken: `Bearer ${accessToken}`,
+    accessToken: accessToken,
+    user: user,
   };
 };
 
